@@ -1,4 +1,6 @@
-const SUPABASE_URL = "https://zgenbnkzoxxacrrsjibj.supabase.co";
+const SUPABASE_URL =
+    "https://zgenbnkzoxxacrrsjibj.supabase.co";
+
 const SUPABASE_PUBLISHABLE_KEY =
     "sb_publishable_zHZKaQ7Lpkrzbt7_Ebh-vQ_zfIUX3Aj";
 
@@ -43,10 +45,27 @@ function getAllPlayers() {
     );
 }
 
-function getPlayerNames(match) {
-    if (!match) return [];
+/* Match type helper */
+function isSingleMatch(match) {
+    return String(match?.type || "")
+        .toLowerCase()
+        .includes("single");
+}
 
-    if (match.type === "single") {
+function normalizeMatchType(value) {
+    return String(value || "")
+        .toLowerCase()
+        .includes("single")
+        ? "single"
+        : "double";
+}
+
+function getPlayerNames(match) {
+    if (!match) {
+        return [];
+    }
+
+    if (isSingleMatch(match)) {
         return [
             match.player_a,
             match.player_b
@@ -54,15 +73,22 @@ function getPlayerNames(match) {
     }
 
     return [
-        ...(Array.isArray(match.team_a) ? match.team_a : []),
-        ...(Array.isArray(match.team_b) ? match.team_b : [])
+        ...(Array.isArray(match.team_a)
+            ? match.team_a
+            : []),
+
+        ...(Array.isArray(match.team_b)
+            ? match.team_b
+            : [])
     ].filter(Boolean);
 }
 
 function getTeamDisplay(match, team) {
-    if (!match) return "";
+    if (!match) {
+        return "";
+    }
 
-    if (match.type === "single") {
+    if (isSingleMatch(match)) {
         if (team === "A") {
             return match.player_a || "TBD";
         }
@@ -88,34 +114,48 @@ function getTeamDisplay(match, team) {
 ========================= */
 
 async function loadDatabase() {
+
     try {
+
         const [
             playersResponse,
             matchesResponse,
             resultsResponse,
             statsResponse
         ] = await Promise.all([
+
             supabaseClient
                 .from("players")
                 .select("*")
-                .order("name", { ascending: true }),
+                .order("name", {
+                    ascending: true
+                }),
 
             supabaseClient
                 .from("matches")
                 .select("*")
-                .order("date", { ascending: true })
-                .order("time", { ascending: true }),
+                .order("date", {
+                    ascending: true
+                })
+                .order("time", {
+                    ascending: true
+                }),
 
             supabaseClient
                 .from("results")
                 .select("*")
-                .order("created_at", { ascending: false }),
+                .order("created_at", {
+                    ascending: false
+                }),
 
             supabaseClient
                 .from("stats")
                 .select("*")
-                .order("player", { ascending: true })
+                .order("player", {
+                    ascending: true
+                })
         ]);
+
 
         if (playersResponse.error) {
             throw playersResponse.error;
@@ -133,24 +173,44 @@ async function loadDatabase() {
             throw statsResponse.error;
         }
 
-        savedPlayers = playersResponse.data || [];
-        savedMatches = matchesResponse.data || [];
-        savedResults = resultsResponse.data || [];
-        savedStats = statsResponse.data || [];
+
+        savedPlayers =
+            playersResponse.data || [];
+
+        savedMatches =
+            matchesResponse.data || [];
+
+        savedResults =
+            resultsResponse.data || [];
+
+        savedStats =
+            statsResponse.data || [];
+
 
         renderEverything();
 
     } catch (error) {
-        console.error("Database loading error:", error);
-        showDatabaseError(error.message);
+
+        console.error(
+            "Database loading error:",
+            error
+        );
+
+        showDatabaseError(
+            error.message
+        );
     }
 }
 
+
 function showDatabaseError(message) {
+
     const errorHTML = `
         <div class="empty-card">
             <h3>Database Error</h3>
-            <p>${escapeHTML(message)}</p>
+            <p>
+                ${escapeHTML(message)}
+            </p>
         </div>
     `;
 
@@ -161,7 +221,9 @@ function showDatabaseError(message) {
     ];
 
     containers.forEach((id) => {
-        const element = document.getElementById(id);
+
+        const element =
+            document.getElementById(id);
 
         if (element) {
             element.innerHTML = errorHTML;
@@ -175,13 +237,21 @@ function showDatabaseError(message) {
 ========================= */
 
 function renderEverything() {
+
     loadAllPlayerDropdowns();
+
     renderMatches();
+
     renderSingleDoubleWickets();
+
     renderFullSchedule();
+
     renderResults();
+
     renderTopStatistics();
+
     renderPlayers();
+
     loadMatchOptions();
 }
 
@@ -194,11 +264,16 @@ function fillPlayerSelect(
     selectId,
     placeholder = "Select Player"
 ) {
-    const select = document.getElementById(selectId);
 
-    if (!select) return;
+    const select =
+        document.getElementById(selectId);
 
-    const currentValue = select.value;
+    if (!select) {
+        return;
+    }
+
+    const currentValue =
+        select.value;
 
     select.innerHTML = "";
 
@@ -206,44 +281,70 @@ function fillPlayerSelect(
         document.createElement("option");
 
     placeholderOption.value = "";
-    placeholderOption.textContent = placeholder;
 
-    select.appendChild(placeholderOption);
+    placeholderOption.textContent =
+        placeholder;
+
+    select.appendChild(
+        placeholderOption
+    );
+
 
     getAllPlayers().forEach((player) => {
+
         const option =
             document.createElement("option");
 
-        option.value = player.name;
-        option.textContent = player.name;
+        option.value =
+            player.name;
+
+        option.textContent =
+            player.name;
 
         select.appendChild(option);
     });
 
+
     if (
         [...select.options].some(
-            (option) => option.value === currentValue
+            (option) =>
+                option.value === currentValue
         )
     ) {
-        select.value = currentValue;
+
+        select.value =
+            currentValue;
     }
 }
 
+
 function loadAllPlayerDropdowns() {
+
     const selectIds = [
+
         "singlePlayerA",
+
         "singlePlayerB",
-        "doubleTeamAPlayer1",
-        "doubleTeamAPlayer2",
-        "doubleTeamBPlayer1",
-        "doubleTeamBPlayer2",
+
+        "doublePlayerA1",
+
+        "doublePlayerA2",
+
+        "doublePlayerB1",
+
+        "doublePlayerB2",
+
         "statsPlayer",
-        "resultPlayerOfMatch"
+
+        "playerOfMatch"
     ];
 
+
     selectIds.forEach((id) => {
+
         fillPlayerSelect(id);
     });
+
 
     updateResultWinnerOptions();
 }
@@ -254,62 +355,106 @@ function loadAllPlayerDropdowns() {
 ========================= */
 
 async function checkAdmin() {
+
     try {
+
         const {
             data: { session }
-        } = await supabaseClient.auth.getSession();
+        } =
+            await supabaseClient.auth.getSession();
 
-        currentUser = session?.user || null;
+
+        currentUser =
+            session?.user || null;
+
 
         if (currentUser) {
+
             await verifyAdmin();
+
         } else {
+
             hideAdminPanel();
         }
 
     } catch (error) {
-        console.error("Admin check error:", error);
+
+        console.error(
+            "Admin check error:",
+            error
+        );
+
         hideAdminPanel();
     }
 }
 
+
 async function verifyAdmin() {
+
     if (!currentUser) {
+
         isAdmin = false;
+
         hideAdminPanel();
+
         return false;
     }
 
+
     try {
-        const { data, error } = await supabaseClient
-            .from("admin_users")
-            .select("*")
-            .ilike("email", currentUser.email)
-            .maybeSingle();
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("admin_users")
+                .select("*")
+                .ilike(
+                    "email",
+                    currentUser.email
+                )
+                .maybeSingle();
+
 
         if (error) {
             throw error;
         }
 
+
         if (data) {
+
             isAdmin = true;
+
             showAdminPanel();
+
+            renderPlayers();
+
             return true;
         }
 
+
         isAdmin = false;
+
         hideAdminPanel();
 
         await supabaseClient.auth.signOut();
 
-        alert("You are not authorized as admin.");
+        alert(
+            "You are not authorized as admin."
+        );
 
         return false;
 
     } catch (error) {
-        console.error("Admin verification error:", error);
+
+        console.error(
+            "Admin verification error:",
+            error
+        );
 
         isAdmin = false;
+
         hideAdminPanel();
 
         return false;
@@ -322,65 +467,96 @@ async function verifyAdmin() {
 ========================= */
 
 const loginModal =
-    document.getElementById("loginModal");
+    document.getElementById(
+        "loginModal"
+    );
 
 const adminLoginBtn =
-    document.getElementById("adminLoginBtn");
+    document.getElementById(
+        "adminLoginBtn"
+    );
 
 const footerAdminBtn =
-    document.getElementById("footerAdminBtn");
+    document.getElementById(
+        "footerAdminBtn"
+    );
 
 const closeLogin =
-    document.getElementById("closeLogin");
+    document.getElementById(
+        "closeLogin"
+    );
+
 
 function openLoginModal() {
-    if (!loginModal) return;
+
+    if (!loginModal) {
+        return;
+    }
 
     loginModal.classList.add("show");
 }
 
+
 function closeLoginModal() {
-    if (!loginModal) return;
+
+    if (!loginModal) {
+        return;
+    }
 
     loginModal.classList.remove("show");
 }
 
+
 if (adminLoginBtn) {
+
     adminLoginBtn.addEventListener(
         "click",
         openLoginModal
     );
 }
 
+
 if (footerAdminBtn) {
+
     footerAdminBtn.addEventListener(
         "click",
         openLoginModal
     );
 }
 
+
 if (closeLogin) {
+
     closeLogin.addEventListener(
         "click",
         closeLoginModal
     );
 }
 
+
 if (loginModal) {
+
     loginModal.addEventListener(
         "click",
         (event) => {
-            if (event.target === loginModal) {
+
+            if (
+                event.target === loginModal
+            ) {
+
                 closeLoginModal();
             }
         }
     );
 }
 
+
 document.addEventListener(
     "keydown",
     (event) => {
+
         if (event.key === "Escape") {
+
             closeLoginModal();
         }
     }
@@ -392,22 +568,35 @@ document.addEventListener(
 ========================= */
 
 const loginForm =
-    document.getElementById("loginForm");
+    document.getElementById(
+        "loginForm"
+    );
 
 const loginMessage =
-    document.getElementById("loginMessage");
+    document.getElementById(
+        "loginMessage"
+    );
+
 
 if (loginForm) {
+
     loginForm.addEventListener(
         "submit",
         async (event) => {
+
             event.preventDefault();
 
+
             const emailInput =
-                document.getElementById("loginEmail");
+                document.getElementById(
+                    "loginEmail"
+                );
 
             const passwordInput =
-                document.getElementById("loginPassword");
+                document.getElementById(
+                    "loginPassword"
+                );
+
 
             const email =
                 emailInput?.value.trim() || "";
@@ -415,8 +604,11 @@ if (loginForm) {
             const password =
                 passwordInput?.value || "";
 
+
             if (!email || !password) {
+
                 if (loginMessage) {
+
                     loginMessage.textContent =
                         "Please enter email and password.";
 
@@ -427,35 +619,52 @@ if (loginForm) {
                 return;
             }
 
+
             try {
+
                 if (loginMessage) {
+
                     loginMessage.textContent =
                         "Logging in...";
 
-                    loginMessage.className = "";
+                    loginMessage.className =
+                        "";
                 }
 
-                const { data, error } =
+
+                const {
+                    data,
+                    error
+                } =
                     await supabaseClient.auth
                         .signInWithPassword({
+
                             email,
+
                             password
                         });
+
 
                 if (error) {
                     throw error;
                 }
 
-                currentUser = data.user;
+
+                currentUser =
+                    data.user;
+
 
                 const adminVerified =
                     await verifyAdmin();
+
 
                 if (!adminVerified) {
                     return;
                 }
 
+
                 if (loginMessage) {
+
                     loginMessage.textContent =
                         "Login successful!";
 
@@ -463,17 +672,24 @@ if (loginForm) {
                         "success";
                 }
 
+
                 setTimeout(() => {
+
                     closeLoginModal();
+
                 }, 700);
 
+
             } catch (error) {
+
                 console.error(
                     "Login error:",
                     error
                 );
 
+
                 if (loginMessage) {
+
                     loginMessage.textContent =
                         error.message;
 
@@ -492,14 +708,22 @@ if (loginForm) {
 
 supabaseClient.auth.onAuthStateChange(
     async (event, session) => {
+
         currentUser =
             session?.user || null;
 
+
         if (currentUser) {
+
             await verifyAdmin();
+
         } else {
+
             isAdmin = false;
+
             hideAdminPanel();
+
+            renderPlayers();
         }
     }
 );
@@ -510,20 +734,27 @@ supabaseClient.auth.onAuthStateChange(
 ========================= */
 
 function showAdminPanel() {
+
     const panel =
-        document.getElementById("adminPanel");
+        document.getElementById("admin");
 
     if (panel) {
-        panel.style.display = "block";
+
+        panel.style.display =
+            "block";
     }
 }
 
+
 function hideAdminPanel() {
+
     const panel =
-        document.getElementById("adminPanel");
+        document.getElementById("admin");
 
     if (panel) {
-        panel.style.display = "none";
+
+        panel.style.display =
+            "none";
     }
 }
 
@@ -533,22 +764,34 @@ function hideAdminPanel() {
 ========================= */
 
 const logoutBtn =
-    document.getElementById("logoutBtn");
+    document.getElementById(
+        "logoutBtn"
+    );
+
 
 if (logoutBtn) {
+
     logoutBtn.addEventListener(
         "click",
         async () => {
 
             await supabaseClient.auth.signOut();
 
+
             currentUser = null;
+
             isAdmin = false;
+
 
             hideAdminPanel();
 
+            renderPlayers();
+
+
             window.scrollTo({
+
                 top: 0,
+
                 behavior: "smooth"
             });
         }
@@ -561,68 +804,106 @@ if (logoutBtn) {
 ========================= */
 
 const playerForm =
-    document.getElementById("playerForm");
+    document.getElementById(
+        "playerForm"
+    );
+
 
 if (playerForm) {
+
     playerForm.addEventListener(
         "submit",
         async (event) => {
 
             event.preventDefault();
 
+
             if (!isAdmin) {
-                alert("Admin login required.");
+
+                alert(
+                    "Admin login required."
+                );
+
                 return;
             }
 
+
             const playerNameInput =
-                document.getElementById("playerName");
+                document.getElementById(
+                    "playerName"
+                );
+
 
             const playerName =
                 playerNameInput?.value.trim() || "";
 
+
             if (!playerName) {
-                alert("Enter player name.");
+
+                alert(
+                    "Enter player name."
+                );
+
                 return;
             }
+
 
             const duplicate =
                 savedPlayers.some(
                     (player) =>
-                        String(player.name).toLowerCase() ===
+                        String(
+                            player.name
+                        ).toLowerCase() ===
                         playerName.toLowerCase()
                 );
 
+
             if (duplicate) {
-                alert("This player already exists.");
+
+                alert(
+                    "This player already exists."
+                );
+
                 return;
             }
 
+
             try {
-                const { error } =
+
+                const {
+                    error
+                } =
                     await supabaseClient
                         .from("players")
                         .insert({
+
                             name: playerName
                         });
+
 
                 if (error) {
                     throw error;
                 }
 
+
                 playerForm.reset();
 
+
                 await loadDatabase();
+
 
                 alert(
                     "Player added successfully."
                 );
 
+
             } catch (error) {
+
                 console.error(
                     "Add player error:",
                     error
                 );
+
 
                 alert(
                     `Error: ${error.message}`
@@ -637,12 +918,20 @@ if (playerForm) {
    DELETE PLAYER
 ========================= */
 
-async function deletePlayer(playerId, playerName) {
+async function deletePlayer(
+    playerId,
+    playerName
+) {
 
     if (!isAdmin) {
-        alert("Admin login required.");
+
+        alert(
+            "Admin login required."
+        );
+
         return;
     }
+
 
     const player =
         savedPlayers.find(
@@ -651,13 +940,22 @@ async function deletePlayer(playerId, playerName) {
                 String(playerId)
         );
 
+
     if (!player) {
-        alert("Player not found.");
+
+        alert(
+            "Player not found."
+        );
+
         return;
     }
 
+
+    /* Check whether player is used in a match */
+
     const playerUsedInMatch =
         savedMatches.some((match) =>
+
             getPlayerNames(match).some(
                 (name) =>
                     String(name).toLowerCase() ===
@@ -665,46 +963,72 @@ async function deletePlayer(playerId, playerName) {
             )
         );
 
+
     if (playerUsedInMatch) {
+
         alert(
+
             `Cannot delete "${playerName}".\n\n` +
+
             "This player is already included in one or more matches.\n\n" +
+
             "Please remove the related match first."
         );
 
         return;
     }
 
-    const confirmed = confirm(
-        `Delete player "${playerName}"?\n\n` +
-        "The player's statistics will also be removed.\n\n" +
-        "This action cannot be undone.`
-    );
+
+    const confirmed =
+        confirm(
+
+            `Delete player "${playerName}"?\n\n` +
+
+            "The player's statistics will also be removed.\n\n" +
+
+            "This action cannot be undone."
+        );
+
 
     if (!confirmed) {
         return;
     }
 
+
     try {
 
-        /* DELETE PLAYER STATS */
-        const { error: statsError } =
+        /* Delete player statistics */
+
+        const {
+            error: statsError
+        } =
             await supabaseClient
                 .from("stats")
                 .delete()
-                .eq("player", playerName);
+                .eq(
+                    "player",
+                    playerName
+                );
+
 
         if (statsError) {
             throw statsError;
         }
 
 
-        /* DELETE PLAYER */
-        const { error: playerError } =
+        /* Delete player */
+
+        const {
+            error: playerError
+        } =
             await supabaseClient
                 .from("players")
                 .delete()
-                .eq("id", playerId);
+                .eq(
+                    "id",
+                    playerId
+                );
+
 
         if (playerError) {
             throw playerError;
@@ -713,9 +1037,12 @@ async function deletePlayer(playerId, playerName) {
 
         await loadDatabase();
 
+
         alert(
+
             `"${playerName}" has been deleted successfully.`
         );
+
 
     } catch (error) {
 
@@ -724,10 +1051,13 @@ async function deletePlayer(playerId, playerName) {
             error
         );
 
+
         alert(
+
             "Player delete failed.\n\n" +
             error.message
         );
+
 
         await loadDatabase();
     }
@@ -739,7 +1069,10 @@ async function deletePlayer(playerId, playerName) {
 ========================= */
 
 const matchType =
-    document.getElementById("matchType");
+    document.getElementById(
+        "matchType"
+    );
+
 
 function updateMatchTypeFields() {
 
@@ -753,27 +1086,39 @@ function updateMatchTypeFields() {
             "doubleMatchFields"
         );
 
-    if (!matchType) return;
+
+    if (!matchType) {
+        return;
+    }
+
 
     const isSingle =
-        matchType.value === "single";
+        normalizeMatchType(
+            matchType.value
+        ) === "single";
+
 
     if (singleFields) {
+
         singleFields.style.display =
             isSingle
                 ? "block"
                 : "none";
     }
 
+
     if (doubleFields) {
+
         doubleFields.style.display =
             isSingle
                 ? "none"
                 : "block";
     }
 
+
     updateResultWinnerOptions();
 }
+
 
 if (matchType) {
 
@@ -791,7 +1136,10 @@ if (matchType) {
 ========================= */
 
 const matchForm =
-    document.getElementById("matchForm");
+    document.getElementById(
+        "matchForm"
+    );
+
 
 if (matchForm) {
 
@@ -801,46 +1149,77 @@ if (matchForm) {
 
             event.preventDefault();
 
+
             if (!isAdmin) {
-                alert("Admin login required.");
+
+                alert(
+                    "Admin login required."
+                );
+
                 return;
             }
 
-            const type =
+
+            const selectedType =
                 document.getElementById(
                     "matchType"
-                )?.value || "single";
+                )?.value || "";
+
+
+            const type =
+                normalizeMatchType(
+                    selectedType
+                );
+
 
             const date =
                 document.getElementById(
                     "matchDate"
                 )?.value || "";
 
+
             const time =
                 document.getElementById(
                     "matchTime"
                 )?.value || "";
+
 
             const venue =
                 document.getElementById(
                     "matchVenue"
                 )?.value.trim() || "";
 
-            if (!date || !time || !venue) {
+
+            if (
+                !selectedType ||
+                !date ||
+                !time ||
+                !venue
+            ) {
+
                 alert(
-                    "Please fill date, time and venue."
+                    "Please fill all match fields."
                 );
 
                 return;
             }
 
+
             let matchData = {
+
                 type,
+
                 date,
+
                 time,
+
                 venue,
+
                 status: "Upcoming"
             };
+
+
+            /* SINGLE */
 
             if (type === "single") {
 
@@ -849,12 +1228,15 @@ if (matchForm) {
                         "singlePlayerA"
                     )?.value || "";
 
+
                 const playerB =
                     document.getElementById(
                         "singlePlayerB"
                     )?.value || "";
 
+
                 if (!playerA || !playerB) {
+
                     alert(
                         "Select both players."
                     );
@@ -862,13 +1244,16 @@ if (matchForm) {
                     return;
                 }
 
+
                 if (playerA === playerB) {
+
                     alert(
                         "A player cannot play against himself."
                     );
 
                     return;
                 }
+
 
                 matchData.player_a =
                     playerA;
@@ -881,41 +1266,55 @@ if (matchForm) {
 
                 matchData.team_b =
                     [playerB];
+            }
 
-            } else {
+
+            /* DOUBLE */
+
+            else {
 
                 const teamAPlayer1 =
                     document.getElementById(
-                        "doubleTeamAPlayer1"
+                        "doublePlayerA1"
                     )?.value || "";
+
 
                 const teamAPlayer2 =
                     document.getElementById(
-                        "doubleTeamAPlayer2"
+                        "doublePlayerA2"
                     )?.value || "";
+
 
                 const teamBPlayer1 =
                     document.getElementById(
-                        "doubleTeamBPlayer1"
+                        "doublePlayerB1"
                     )?.value || "";
+
 
                 const teamBPlayer2 =
                     document.getElementById(
-                        "doubleTeamBPlayer2"
+                        "doublePlayerB2"
                     )?.value || "";
 
+
                 const players = [
+
                     teamAPlayer1,
+
                     teamAPlayer2,
+
                     teamBPlayer1,
+
                     teamBPlayer2
                 ];
+
 
                 if (
                     players.some(
                         (player) => !player
                     )
                 ) {
+
                     alert(
                         "Select all four players."
                     );
@@ -923,10 +1322,15 @@ if (matchForm) {
                     return;
                 }
 
+
                 const uniquePlayers =
                     new Set(players);
 
-                if (uniquePlayers.size !== 4) {
+
+                if (
+                    uniquePlayers.size !== 4
+                ) {
+
                     alert(
                         "All four players must be different."
                     );
@@ -934,37 +1338,54 @@ if (matchForm) {
                     return;
                 }
 
+
                 matchData.team_a = [
+
                     teamAPlayer1,
+
                     teamAPlayer2
                 ];
 
+
                 matchData.team_b = [
+
                     teamBPlayer1,
+
                     teamBPlayer2
                 ];
             }
 
+
             try {
 
-                const { error } =
+                const {
+                    error
+                } =
                     await supabaseClient
                         .from("matches")
-                        .insert(matchData);
+                        .insert(
+                            matchData
+                        );
+
 
                 if (error) {
                     throw error;
                 }
 
+
                 matchForm.reset();
+
 
                 updateMatchTypeFields();
 
+
                 await loadDatabase();
+
 
                 alert(
                     "Match added successfully."
                 );
+
 
             } catch (error) {
 
@@ -972,6 +1393,7 @@ if (matchForm) {
                     "Add match error:",
                     error
                 );
+
 
                 alert(
                     `Error: ${error.message}`
@@ -993,58 +1415,79 @@ function renderMatches() {
             "todayMatchesContainer"
         );
 
+
     const tomorrowContainer =
         document.getElementById(
             "tomorrowMatchesContainer"
         );
 
+
     if (
         !todayContainer ||
         !tomorrowContainer
     ) {
+
         return;
     }
+
 
     const today =
         new Date();
 
+
     const tomorrow =
         new Date();
+
 
     tomorrow.setDate(
         tomorrow.getDate() + 1
     );
 
+
     const todayString =
         formatLocalDate(today);
+
 
     const tomorrowString =
         formatLocalDate(tomorrow);
 
+
     const todayMatches =
         savedMatches.filter(
             (match) =>
-                match.date === todayString
+                match.date ===
+                todayString
         );
+
 
     const tomorrowMatches =
         savedMatches.filter(
             (match) =>
-                match.date === tomorrowString
+                match.date ===
+                tomorrowString
         );
 
+
     renderMatchList(
+
         todayContainer,
+
         todayMatches,
+
         "No matches scheduled for today."
     );
 
+
     renderMatchList(
+
         tomorrowContainer,
+
         tomorrowMatches,
+
         "No matches scheduled for tomorrow."
     );
 }
+
 
 function renderMatchList(
     container,
@@ -1055,15 +1498,21 @@ function renderMatchList(
     if (!matches.length) {
 
         container.innerHTML = `
+
             <div class="empty-card">
+
                 <p>
-                    ${escapeHTML(emptyMessage)}
+                    ${escapeHTML(
+                        emptyMessage
+                    )}
                 </p>
+
             </div>
         `;
 
         return;
     }
+
 
     container.innerHTML =
         matches
@@ -1078,47 +1527,67 @@ function renderMatchList(
 
 function createMatchCard(match) {
 
-    const isSingle =
-        match.type === "single";
+    const single =
+        isSingleMatch(match);
+
 
     const teamA =
-        getTeamDisplay(match, "A");
+        getTeamDisplay(
+            match,
+            "A"
+        );
+
 
     const teamB =
-        getTeamDisplay(match, "B");
+        getTeamDisplay(
+            match,
+            "B"
+        );
+
 
     return `
+
         <div class="match-card">
 
             <span class="badge ${
-                isSingle
+                single
                     ? "single"
                     : "double"
             }">
 
                 ${
-                    isSingle
+                    single
                         ? "SINGLE WICKET • 1V1"
                         : "DOUBLE WICKET • 2V2"
                 }
 
             </span>
 
+
             <div class="match-teams">
 
                 <div class="team">
+
                     ${escapeHTML(teamA)}
+
                 </div>
+
 
                 <div class="vs">
+
                     VS
+
                 </div>
 
+
                 <div class="team">
+
                     ${escapeHTML(teamB)}
+
                 </div>
 
             </div>
+
 
             <div class="match-info">
 
@@ -1136,10 +1605,14 @@ function createMatchCard(match) {
 
             </div>
 
+
             <div class="match-status">
+
                 ${escapeHTML(
-                    match.status || "Upcoming"
+                    match.status ||
+                    "Upcoming"
                 )}
+
             </div>
 
         </div>
@@ -1158,37 +1631,48 @@ function renderSingleDoubleWickets() {
             "singleWicketContainer"
         );
 
+
     const doubleContainer =
         document.getElementById(
             "doubleWicketContainer"
         );
+
 
     if (singleContainer) {
 
         const singleMatches =
             savedMatches.filter(
                 (match) =>
-                    match.type === "single"
+                    isSingleMatch(match)
             );
 
+
         renderMatchList(
+
             singleContainer,
+
             singleMatches,
+
             "No single wicket matches."
         );
     }
+
 
     if (doubleContainer) {
 
         const doubleMatches =
             savedMatches.filter(
                 (match) =>
-                    match.type === "double"
+                    !isSingleMatch(match)
             );
 
+
         renderMatchList(
+
             doubleContainer,
+
             doubleMatches,
+
             "No double wicket matches."
         );
     }
@@ -1206,24 +1690,33 @@ function loadMatchOptions() {
             "resultMatch"
         );
 
-    if (!resultMatch) return;
+
+    if (!resultMatch) {
+        return;
+    }
+
 
     const currentValue =
         resultMatch.value;
 
+
     resultMatch.innerHTML = `
+
         <option value="">
             Select Match
         </option>
     `;
 
+
     const incompleteMatches =
         savedMatches.filter(
             (match) =>
-                String(match.status)
-                    .toLowerCase() !==
+                String(
+                    match.status
+                ).toLowerCase() !==
                 "completed"
         );
+
 
     incompleteMatches.forEach(
         (match) => {
@@ -1233,13 +1726,25 @@ function loadMatchOptions() {
                     "option"
                 );
 
+
             option.value =
                 match.id;
 
+
             option.textContent =
+
                 `${match.date} ${match.time} — ` +
-                `${getTeamDisplay(match, "A")} vs ` +
-                `${getTeamDisplay(match, "B")}`;
+
+                `${getTeamDisplay(
+                    match,
+                    "A"
+                )} vs ` +
+
+                `${getTeamDisplay(
+                    match,
+                    "B"
+                )}`;
+
 
             resultMatch.appendChild(
                 option
@@ -1247,23 +1752,29 @@ function loadMatchOptions() {
         }
     );
 
+
     if (
         [...resultMatch.options].some(
             (option) =>
-                option.value === currentValue
+                option.value ===
+                currentValue
         )
     ) {
+
         resultMatch.value =
             currentValue;
     }
 
+
     updateResultWinnerOptions();
 }
+
 
 const resultMatch =
     document.getElementById(
         "resultMatch"
     );
+
 
 if (resultMatch) {
 
@@ -1285,40 +1796,54 @@ function updateResultWinnerOptions() {
             "resultMatch"
         );
 
+
     const winnerSelect =
         document.getElementById(
             "winner"
         );
 
+
     const playerOfMatchSelect =
         document.getElementById(
-            "resultPlayerOfMatch"
+            "playerOfMatch"
         );
 
-    if (!resultMatchElement) return;
+
+    if (!resultMatchElement) {
+        return;
+    }
+
 
     if (winnerSelect) {
 
         winnerSelect.innerHTML = `
+
             <option value="">
                 Select Winner
             </option>
         `;
     }
 
+
     if (playerOfMatchSelect) {
 
         playerOfMatchSelect.innerHTML = `
+
             <option value="">
                 Select Player of Match
             </option>
         `;
     }
 
+
     const matchId =
         resultMatchElement.value;
 
-    if (!matchId) return;
+
+    if (!matchId) {
+        return;
+    }
+
 
     const match =
         savedMatches.find(
@@ -1327,13 +1852,25 @@ function updateResultWinnerOptions() {
                 String(matchId)
         );
 
-    if (!match) return;
+
+    if (!match) {
+        return;
+    }
+
 
     const teamA =
-        getTeamDisplay(match, "A");
+        getTeamDisplay(
+            match,
+            "A"
+        );
+
 
     const teamB =
-        getTeamDisplay(match, "B");
+        getTeamDisplay(
+            match,
+            "B"
+        );
+
 
     if (winnerSelect) {
 
@@ -1342,29 +1879,37 @@ function updateResultWinnerOptions() {
                 "option"
             );
 
+
         optionA.value = "A";
+
 
         optionA.textContent =
             `Team A — ${teamA}`;
 
+
         winnerSelect.appendChild(
             optionA
         );
+
 
         const optionB =
             document.createElement(
                 "option"
             );
 
+
         optionB.value = "B";
+
 
         optionB.textContent =
             `Team B — ${teamB}`;
+
 
         winnerSelect.appendChild(
             optionB
         );
     }
+
 
     if (playerOfMatchSelect) {
 
@@ -1376,14 +1921,19 @@ function updateResultWinnerOptions() {
                         "option"
                     );
 
+
                 option.value =
                     player;
+
 
                 option.textContent =
                     player;
 
+
                 playerOfMatchSelect
-                    .appendChild(option);
+                    .appendChild(
+                        option
+                    );
             });
     }
 }
@@ -1397,37 +1947,56 @@ function hasResultForMatch(matchId) {
 
     return savedResults.some(
         (result) =>
-            String(result.match_id) ===
+            String(
+                result.match_id
+            ) ===
             String(matchId)
     );
 }
+
 
 async function ensurePlayerStats(
     playerName
 ) {
 
-    if (!playerName) return;
+    if (!playerName) {
+        return;
+    }
+
 
     const existing =
         savedStats.find(
             (stat) =>
-                String(stat.player)
-                    .toLowerCase() ===
-                String(playerName)
-                    .toLowerCase()
+                String(
+                    stat.player
+                ).toLowerCase() ===
+                String(
+                    playerName
+                ).toLowerCase()
         );
 
-    if (existing) return;
 
-    const { error } =
+    if (existing) {
+        return;
+    }
+
+
+    const {
+        error
+    } =
         await supabaseClient
             .from("stats")
             .insert({
+
                 player: playerName,
+
                 runs: 0,
+
                 wickets: 0,
+
                 wins: 0
             });
+
 
     if (error) {
         throw error;
@@ -1444,6 +2013,7 @@ const resultForm =
         "resultForm"
     );
 
+
 if (resultForm) {
 
     resultForm.addEventListener(
@@ -1452,7 +2022,9 @@ if (resultForm) {
 
             event.preventDefault();
 
+
             if (!isAdmin) {
+
                 alert(
                     "Admin login required."
                 );
@@ -1460,25 +2032,30 @@ if (resultForm) {
                 return;
             }
 
+
             const matchId =
                 document.getElementById(
                     "resultMatch"
                 )?.value || "";
+
 
             const winner =
                 document.getElementById(
                     "winner"
                 )?.value || "";
 
+
             const score =
                 document.getElementById(
                     "score"
                 )?.value.trim() || "";
 
+
             const playerOfMatch =
                 document.getElementById(
-                    "resultPlayerOfMatch"
+                    "playerOfMatch"
                 )?.value || "";
+
 
             if (
                 !matchId ||
@@ -1486,6 +2063,7 @@ if (resultForm) {
                 !score ||
                 !playerOfMatch
             ) {
+
                 alert(
                     "Please fill all result fields."
                 );
@@ -1493,15 +2071,20 @@ if (resultForm) {
                 return;
             }
 
+
             if (
-                hasResultForMatch(matchId)
+                hasResultForMatch(
+                    matchId
+                )
             ) {
+
                 alert(
                     "This match already has a result."
                 );
 
                 return;
             }
+
 
             const match =
                 savedMatches.find(
@@ -1510,7 +2093,9 @@ if (resultForm) {
                         String(matchId)
                 );
 
+
             if (!match) {
+
                 alert(
                     "Match not found."
                 );
@@ -1518,40 +2103,63 @@ if (resultForm) {
                 return;
             }
 
+
             const winnerPlayers =
+
                 winner === "A"
+
                     ? (
-                        match.type === "single"
-                            ? [match.player_a]
+
+                        isSingleMatch(match)
+
+                            ? [
+                                match.player_a
+                            ]
+
                             : match.team_a
                     )
+
                     : (
-                        match.type === "single"
-                            ? [match.player_b]
+
+                        isSingleMatch(match)
+
+                            ? [
+                                match.player_b
+                            ]
+
                             : match.team_b
                     );
 
+
             const winnerTeamName =
+
                 winner === "A"
+
                     ? getTeamDisplay(
                         match,
                         "A"
                     )
+
                     : getTeamDisplay(
                         match,
                         "B"
                     );
 
+
             const loserTeamName =
+
                 winner === "A"
+
                     ? getTeamDisplay(
                         match,
                         "B"
                     )
+
                     : getTeamDisplay(
                         match,
                         "A"
                     );
+
 
             try {
 
@@ -1560,11 +2168,15 @@ if (resultForm) {
                     of winnerPlayers
                 ) {
 
-                    if (!player) continue;
+                    if (!player) {
+                        continue;
+                    }
+
 
                     await ensurePlayerStats(
                         player
                     );
+
 
                     const existingStat =
                         savedStats.find(
@@ -1577,28 +2189,36 @@ if (resultForm) {
                                 ).toLowerCase()
                         );
 
+
                     const currentWins =
                         Number(
                             existingStat?.wins ||
                             0
                         );
 
-                    const { error } =
+
+                    const {
+                        error
+                    } =
                         await supabaseClient
                             .from("stats")
                             .update({
+
                                 wins:
                                     currentWins + 1
+
                             })
                             .eq(
                                 "player",
                                 player
                             );
 
+
                     if (error) {
                         throw error;
                     }
                 }
+
 
                 const {
                     error: resultError
@@ -1606,6 +2226,7 @@ if (resultForm) {
                     await supabaseClient
                         .from("results")
                         .insert({
+
                             match_id:
                                 match.id,
 
@@ -1624,9 +2245,11 @@ if (resultForm) {
                                 playerOfMatch
                         });
 
+
                 if (resultError) {
                     throw resultError;
                 }
+
 
                 const {
                     error: matchError
@@ -1634,25 +2257,32 @@ if (resultForm) {
                     await supabaseClient
                         .from("matches")
                         .update({
+
                             status:
                                 "Completed"
+
                         })
                         .eq(
                             "id",
                             match.id
                         );
 
+
                 if (matchError) {
                     throw matchError;
                 }
 
+
                 resultForm.reset();
 
+
                 await loadDatabase();
+
 
                 alert(
                     "Result added successfully."
                 );
+
 
             } catch (error) {
 
@@ -1660,6 +2290,7 @@ if (resultForm) {
                     "Add result error:",
                     error
                 );
+
 
                 alert(
                     `Error: ${error.message}`
@@ -1681,20 +2312,28 @@ function renderResults() {
             "resultsContainer"
         );
 
-    if (!container) return;
+
+    if (!container) {
+        return;
+    }
+
 
     if (!savedResults.length) {
 
         container.innerHTML = `
+
             <div class="empty-card">
+
                 <p>
                     No results available yet.
                 </p>
+
             </div>
         `;
 
         return;
     }
+
 
     container.innerHTML =
         savedResults
@@ -1711,46 +2350,69 @@ function renderResults() {
                             )
                     );
 
+
                 const type =
-                    match?.type === "double"
-                        ? "DOUBLE WICKET • 2V2"
-                        : "SINGLE WICKET • 1V1";
+                    match &&
+                    isSingleMatch(match)
+
+                        ? "SINGLE WICKET • 1V1"
+
+                        : "DOUBLE WICKET • 2V2";
+
 
                 return `
+
                     <div class="result-card">
 
                         <span class="badge">
-                            ${escapeHTML(type)}
+
+                            ${escapeHTML(
+                                type
+                            )}
+
                         </span>
 
+
                         <h3>
+
                             ${escapeHTML(
                                 result.winner ||
                                 "Winner"
                             )}
+
                         </h3>
 
+
                         <p>
+
                             <strong>
                                 Score:
                             </strong>
 
                             ${escapeHTML(
-                                result.score || "-"
+                                result.score ||
+                                "-"
                             )}
+
                         </p>
 
+
                         <p>
+
                             <strong>
                                 Defeated:
                             </strong>
 
                             ${escapeHTML(
-                                result.loser || "-"
+                                result.loser ||
+                                "-"
                             )}
+
                         </p>
 
+
                         <p>
+
                             <strong>
                                 Player of Match:
                             </strong>
@@ -1759,6 +2421,7 @@ function renderResults() {
                                 result.player_of_match ||
                                 "-"
                             )}
+
                         </p>
 
                     </div>
@@ -1777,6 +2440,7 @@ const statsForm =
         "statsForm"
     );
 
+
 if (statsForm) {
 
     statsForm.addEventListener(
@@ -1785,7 +2449,9 @@ if (statsForm) {
 
             event.preventDefault();
 
+
             if (!isAdmin) {
+
                 alert(
                     "Admin login required."
                 );
@@ -1793,33 +2459,39 @@ if (statsForm) {
                 return;
             }
 
+
             const player =
                 document.getElementById(
                     "statsPlayer"
                 )?.value || "";
 
+
             const runs =
                 Number(
                     document.getElementById(
-                        "statsRuns"
+                        "runs"
                     )?.value || 0
                 );
+
 
             const wickets =
                 Number(
                     document.getElementById(
-                        "statsWickets"
+                        "wickets"
                     )?.value || 0
                 );
+
 
             const wins =
                 Number(
                     document.getElementById(
-                        "statsWins"
+                        "wins"
                     )?.value || 0
                 );
 
+
             if (!player) {
+
                 alert(
                     "Select a player."
                 );
@@ -1827,35 +2499,50 @@ if (statsForm) {
                 return;
             }
 
+
             try {
 
-                const { error } =
+                const {
+                    error
+                } =
                     await supabaseClient
                         .from("stats")
                         .upsert(
+
                             {
+
                                 player,
+
                                 runs,
+
                                 wickets,
+
                                 wins
                             },
+
                             {
+
                                 onConflict:
                                     "player"
                             }
                         );
 
+
                 if (error) {
                     throw error;
                 }
 
+
                 statsForm.reset();
 
+
                 await loadDatabase();
+
 
                 alert(
                     "Statistics updated successfully."
                 );
+
 
             } catch (error) {
 
@@ -1863,6 +2550,7 @@ if (statsForm) {
                     "Stats error:",
                     error
                 );
+
 
                 alert(
                     `Error: ${error.message}`
@@ -1884,56 +2572,66 @@ function renderTopStatistics() {
             "topScorer"
         );
 
+
     const topScorerRuns =
         document.getElementById(
             "topScorerRuns"
         );
+
 
     const bestBowler =
         document.getElementById(
             "bestBowler"
         );
 
+
     const bestBowlerWickets =
         document.getElementById(
             "bestBowlerWickets"
         );
+
 
     const mostWins =
         document.getElementById(
             "mostWins"
         );
 
+
     const mostWinsCount =
         document.getElementById(
             "mostWinsCount"
         );
 
+
     if (!savedStats.length) {
 
-        if (topScorer)
+        if (topScorer) {
             topScorer.textContent = "-";
+        }
 
-        if (topScorerRuns)
-            topScorerRuns.textContent =
-                "0";
+        if (topScorerRuns) {
+            topScorerRuns.textContent = "0";
+        }
 
-        if (bestBowler)
+        if (bestBowler) {
             bestBowler.textContent = "-";
+        }
 
-        if (bestBowlerWickets)
-            bestBowlerWickets.textContent =
-                "0";
+        if (bestBowlerWickets) {
+            bestBowlerWickets.textContent = "0";
+        }
 
-        if (mostWins)
+        if (mostWins) {
             mostWins.textContent = "-";
+        }
 
-        if (mostWinsCount)
-            mostWinsCount.textContent =
-                "0";
+        if (mostWinsCount) {
+            mostWinsCount.textContent = "0";
+        }
 
         return;
     }
+
 
     const scorer =
         [...savedStats].sort(
@@ -1942,12 +2640,14 @@ function renderTopStatistics() {
                 Number(a.runs || 0)
         )[0];
 
+
     const bowler =
         [...savedStats].sort(
             (a, b) =>
                 Number(b.wickets || 0) -
                 Number(a.wickets || 0)
         )[0];
+
 
     const winner =
         [...savedStats].sort(
@@ -1956,36 +2656,48 @@ function renderTopStatistics() {
                 Number(a.wins || 0)
         )[0];
 
+
     if (topScorer) {
+
         topScorer.textContent =
             scorer?.player || "-";
     }
 
+
     if (topScorerRuns) {
+
         topScorerRuns.textContent =
             Number(
                 scorer?.runs || 0
             );
     }
 
+
     if (bestBowler) {
+
         bestBowler.textContent =
             bowler?.player || "-";
     }
 
+
     if (bestBowlerWickets) {
+
         bestBowlerWickets.textContent =
             Number(
                 bowler?.wickets || 0
             );
     }
 
+
     if (mostWins) {
+
         mostWins.textContent =
             winner?.player || "-";
     }
 
+
     if (mostWinsCount) {
+
         mostWinsCount.textContent =
             Number(
                 winner?.wins || 0
@@ -2025,20 +2737,28 @@ function renderPlayers() {
             "playersContainer"
         );
 
-    if (!container) return;
+
+    if (!container) {
+        return;
+    }
+
 
     if (!savedPlayers.length) {
 
         container.innerHTML = `
+
             <div class="empty-card">
+
                 <p>
                     No players added yet.
                 </p>
+
             </div>
         `;
 
         return;
     }
+
 
     container.innerHTML =
         savedPlayers
@@ -2055,13 +2775,18 @@ function renderPlayers() {
                             ).toLowerCase()
                     );
 
+
                 const matchesPlayed =
                     savedMatches.filter(
                         (match) =>
+
                             String(
                                 match.status
                             ).toLowerCase() ===
-                                "completed" &&
+                            "completed"
+
+                            &&
+
                             getPlayerNames(
                                 match
                             ).some(
@@ -2075,62 +2800,75 @@ function renderPlayers() {
                             )
                     ).length;
 
+
                 const pom =
                     getPlayerOfMatchCount(
                         player.name
                     );
 
+
                 return `
+
                     <div class="player-card">
 
                         <h3>
+
                             ${escapeHTML(
                                 player.name
                             )}
+
                         </h3>
+
 
                         <div class="player-stats">
 
                             <div>
+
                                 <strong>
                                     ${Number(
-                                        stat?.runs ||
-                                        0
+                                        stat?.runs || 0
                                     )}
                                 </strong>
 
                                 <span>
                                     Runs
                                 </span>
+
                             </div>
 
+
                             <div>
+
                                 <strong>
                                     ${Number(
-                                        stat?.wickets ||
-                                        0
+                                        stat?.wickets || 0
                                     )}
                                 </strong>
 
                                 <span>
                                     Wickets
                                 </span>
+
                             </div>
 
+
                             <div>
+
                                 <strong>
                                     ${Number(
-                                        stat?.wins ||
-                                        0
+                                        stat?.wins || 0
                                     )}
                                 </strong>
 
                                 <span>
                                     Wins
                                 </span>
+
                             </div>
 
+
                             <div>
+
                                 <strong>
                                     ${matchesPlayed}
                                 </strong>
@@ -2138,9 +2876,12 @@ function renderPlayers() {
                                 <span>
                                     Matches
                                 </span>
+
                             </div>
 
+
                             <div>
+
                                 <strong>
                                     ${pom}
                                 </strong>
@@ -2148,29 +2889,34 @@ function renderPlayers() {
                                 <span>
                                     POM
                                 </span>
+
                             </div>
 
                         </div>
 
+
                         ${
                             isAdmin
+
                                 ? `
+
                                     <button
                                         type="button"
                                         class="admin-btn danger-btn"
                                         style="margin-top:15px;"
-                                        onclick="deletePlayer('${escapeHTML(
+                                        data-player-id="${escapeHTML(
                                             player.id
-                                        )}', '${escapeHTML(
+                                        )}"
+                                        data-player-name="${escapeHTML(
                                             player.name
-                                        ).replace(
-                                            /'/g,
-                                            "\\'"
-                                        )}')"
+                                        )}"
+                                        onclick="handleDeletePlayer(this)"
                                     >
                                         🗑️ Delete Player
                                     </button>
+
                                 `
+
                                 : ""
                         }
 
@@ -2178,6 +2924,32 @@ function renderPlayers() {
                 `;
             })
             .join("");
+}
+
+
+/* =========================
+   DELETE PLAYER BUTTON
+========================= */
+
+function handleDeletePlayer(button) {
+
+    if (!button) {
+        return;
+    }
+
+
+    const playerId =
+        button.dataset.playerId;
+
+
+    const playerName =
+        button.dataset.playerName;
+
+
+    deletePlayer(
+        playerId,
+        playerName
+    );
 }
 
 
@@ -2192,29 +2964,41 @@ function renderFullSchedule() {
             "fullScheduleContainer"
         );
 
-    if (!container) return;
+
+    if (!container) {
+        return;
+    }
+
 
     if (!savedMatches.length) {
 
         container.innerHTML = `
+
             <tr>
+
                 <td colspan="6">
+
                     No matches scheduled yet.
+
                 </td>
+
             </tr>
         `;
 
         return;
     }
 
+
     const rows =
         savedMatches
             .map((match) => {
 
-                const isSingle =
-                    match.type === "single";
+                const single =
+                    isSingleMatch(match);
+
 
                 return `
+
                     <tr>
 
                         <td>
@@ -2223,13 +3007,16 @@ function renderFullSchedule() {
                             )}
                         </td>
 
+
                         <td>
                             ${escapeHTML(
                                 match.time
                             )}
                         </td>
 
+
                         <td>
+
                             ${escapeHTML(
                                 getTeamDisplay(
                                     match,
@@ -2247,21 +3034,27 @@ function renderFullSchedule() {
                                     "B"
                                 )
                             )}
+
                         </td>
 
+
                         <td>
+
                             ${
-                                isSingle
+                                single
                                     ? "Single"
                                     : "Double"
                             }
+
                         </td>
+
 
                         <td>
                             ${escapeHTML(
                                 match.venue
                             )}
                         </td>
+
 
                         <td>
                             ${escapeHTML(
@@ -2275,7 +3068,9 @@ function renderFullSchedule() {
             })
             .join("");
 
-    container.innerHTML = rows;
+
+    container.innerHTML =
+        rows;
 }
 
 
@@ -2288,9 +3083,11 @@ const resetTournamentBtn =
         "resetTournamentBtn"
     );
 
+
 async function resetTournamentData() {
 
     if (!isAdmin) {
+
         alert(
             "Admin login required."
         );
@@ -2298,32 +3095,48 @@ async function resetTournamentData() {
         return;
     }
 
+
     const firstConfirm =
         confirm(
+
             "WARNING!\n\n" +
+
             "This will delete all tournament data:\n\n" +
+
             "• Players\n" +
+
             "• Matches\n" +
+
             "• Results\n" +
+
             "• Statistics\n\n" +
+
             "Your admin account and website design will NOT be deleted.\n\n" +
+
             "Continue?"
         );
+
 
     if (!firstConfirm) {
         return;
     }
 
+
     const finalConfirm =
         confirm(
+
             "FINAL WARNING!\n\n" +
+
             "All tournament data will be permanently deleted.\n\n" +
+
             "Are you absolutely sure?"
         );
+
 
     if (!finalConfirm) {
         return;
     }
+
 
     if (resetTournamentBtn) {
 
@@ -2334,7 +3147,10 @@ async function resetTournamentData() {
             "⏳ Resetting...";
     }
 
+
     try {
+
+        /* Results */
 
         const {
             error: resultsError
@@ -2348,9 +3164,13 @@ async function resetTournamentData() {
                     null
                 );
 
+
         if (resultsError) {
             throw resultsError;
         }
+
+
+        /* Matches */
 
         const {
             error: matchesError
@@ -2364,9 +3184,13 @@ async function resetTournamentData() {
                     null
                 );
 
+
         if (matchesError) {
             throw matchesError;
         }
+
+
+        /* Statistics */
 
         const {
             error: statsError
@@ -2380,9 +3204,13 @@ async function resetTournamentData() {
                     null
                 );
 
+
         if (statsError) {
             throw statsError;
         }
+
+
+        /* Players */
 
         const {
             error: playersError
@@ -2396,20 +3224,28 @@ async function resetTournamentData() {
                     null
                 );
 
+
         if (playersError) {
             throw playersError;
         }
 
+
         savedPlayers = [];
+
         savedMatches = [];
+
         savedResults = [];
+
         savedStats = [];
 
+
         renderEverything();
+
 
         alert(
             "Tournament data has been reset successfully."
         );
+
 
     } catch (error) {
 
@@ -2418,12 +3254,16 @@ async function resetTournamentData() {
             error
         );
 
+
         alert(
+
             "Reset failed.\n\n" +
             error.message
         );
 
+
         await loadDatabase();
+
 
     } finally {
 
@@ -2437,6 +3277,7 @@ async function resetTournamentData() {
         }
     }
 }
+
 
 if (resetTournamentBtn) {
 
@@ -2457,14 +3298,17 @@ async function startWebsite() {
         "Cross Cricket website starting..."
     );
 
+
     await checkAdmin();
 
     await loadDatabase();
+
 
     console.log(
         "Cross Cricket website ready."
     );
 }
+
 
 startWebsite();
 
@@ -2475,7 +3319,9 @@ startWebsite();
 
 setInterval(
     async () => {
+
         await loadDatabase();
+
     },
     60000
 );
