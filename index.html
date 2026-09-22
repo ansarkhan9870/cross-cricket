@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cross Single/Double Wicket Matches</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+
+        <div class="logo">
+            🏏 Cross Cricket
+        </div>
+
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#schedule">Today</a>
+            <a href="#tomorrow">Tomorrow</a>
+            <a href="#singleWicket">Single Wicket</a>
+            <a href="#doubleWicket">Double Wicket</a>
+            <a href="#fullSchedule">Schedule</a>
+            <a href="#results">Results</a>
+            <a href="#players">Players</a>
+            <a href="#stats">Stats</a>
+        </nav>
+
+        <button id="adminLoginBtn" class="login-btn">
+            🔐 Admin
+        </button>
+
+    </header>
+
+
+    <!-- HERO -->
+    <section id="home" class="hero">
+
+        <div class="hero-content">
+
+            <p class="subtitle">
+                CRICKET TOURNAMENT
+            </p>
+
+            <h1>
+                Cross Single/<br>
+                Double Wicket Matches
+            </h1>
+
+            <p class="hero-text">
+                Follow today's matches, upcoming fixtures,
+                results and player statistics.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="#schedule" class="btn primary">
+                    View Schedule
+                </a>
+
+                <a href="#results" class="btn secondary">
+                    Latest Results
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="loginModal" class="modal">
+
+        <div class="modal-box">
+
+            <button id="closeLogin" class="close-btn">
+                ×
+            </button>
+
+            <div class="login-icon">
+                🔐
+            </div>
+
+            <h2>Admin Login</h2>
+
+            <p>
+                Only authorized tournament administrators can access
+                the management panel.
+            </p>
+
+            <form id="loginForm">
+
+                <input
+                    type="email"
+                    id="loginEmail"
+                    placeholder="Admin email"
+                    required
+                >
+
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="Password"
+                    required
+                >
+
+                <button type="submit" class="admin-btn">
+                    Login
+                </button>
+
+            </form>
+
+            <p id="loginMessage" class="login-message"></p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADMIN PANEL -->
+    <section
+        class="section admin-section"
+        id="admin"
+        style="display:none;"
+    >
+
+        <div class="section-heading">
+
+            <p class="section-label">
+                MANAGEMENT
+            </p>
+
+            <div class="admin-heading-row">
+
+                <div>
+                    <h2>Admin Panel</h2>
+
+                    <p>
+                        Manage players, matches, results and statistics.
+                    </p>
+                </div>
+
+                <button id="logoutBtn" class="logout-btn">
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="admin-grid">
+
+            <!-- ADD PLAYER -->
+            <div class="admin-card">
+
+                <h3>Add Player</h3>
+
+                <p>
+                    Add a new player to the tournament.
+                </p>
+
+                <form id="playerForm">
+
+                    <input
+                        type="text"
+                        id="playerName"
+                        placeholder="Enter player name"
+                        required
+                    >
+
+                    <button type="submit" class="admin-btn">
+                        + Add Player
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- ADD MATCH -->
+            <div class="admin-card match-admin-card">
+
+                <h3>Add Match</h3>
+
+                <p>
+                    Create a 1v1 Single Wicket or 2v2 Double Wicket match.
+                </p>
+
+                <form id="matchForm">
+
+                    <select id="matchType" required>
+
+                        <option value="">
+                            Select Match Type
+                        </option>
+
+                        <option value="Single Wicket">
+                            Single Wicket — 1v1
+                        </option>
+
+                        <option value="Double Wicket">
+                            Double Wicket — 2v2
+                        </option>
+
+                    </select>
+
+
+                    <!-- SINGLE -->
+                    <div id="singleMatchFields">
+
+                        <label>Player 1</label>
+
+                        <select id="singlePlayerA">
+                            <option value="">
+                                Select Player 1
+                            </option>
+                        </select>
+
+                        <label>Player 2</label>
+
+                        <select id="singlePlayerB">
+                            <option value="">
+                                Select Player 2
+                            </option>
+                        </select>
+
+                    </div>
+
+
+                    <!-- DOUBLE -->
+                    <div
+                        id="doubleMatchFields"
+                        style="display:none;"
+                    >
+
+                        <div class="team-box">
+
+                            <h4>Team A</h4>
+
+                            <label>Player 1</label>
+
+                            <select id="doublePlayerA1">
+                                <option value="">
+                                    Select Player 1
+                                </option>
+                            </select>
+
+                            <label>Player 2</label>
+
+                            <select id="doublePlayerA2">
+                                <option value="">
+                                    Select Player 2
+                                </option>
+                            </select>
+
+                        </div>
+
+
+                        <div class="team-box">
+
+                            <h4>Team B</h4>
+
+                            <label>Player 1</label>
+
+                            <select id="doublePlayerB1">
+                                <option value="">
+                                    Select Player 1
+                                </option>
+                            </select>
+
+                            <label>Player 2</label>
+
+                            <select id="doublePlayerB2">
+                                <option value="">
+                                    Select Player 2
+                                </option>
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <input
+                        type="date"
+                        id="matchDate"
+                        required
+                    >
+
+                    <input
+                        type="time"
+                        id="matchTime"
+                        required
+                    >
+
+                    <input
+                        type="text"
+                        id="matchVenue"
+                        value="Jail Chowk Cricket Ground"
+                        placeholder="Venue"
+                        required
+                    >
+
+                    <button type="submit" class="admin-btn">
+                        + Add Match
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- RESULT -->
+            <div class="admin-card">
+
+                <h3>Add Result</h3>
+
+                <p>
+                    Save the result of a completed match.
+                </p>
+
+                <form id="resultForm">
+
+                    <select id="resultMatch" required>
+                        <option value="">
+                            Select Match
+                        </option>
+                    </select>
+
+                    <label>Winner</label>
+
+                    <select id="winner" required>
+                        <option value="">
+                            Select Winner
+                        </option>
+                    </select>
+
+                    <input
+                        type="text"
+                        id="score"
+                        placeholder="Result / Score (e.g. 11-8)"
+                        required
+                    >
+
+                    <select id="playerOfMatch" required>
+                        <option value="">
+                            Select Player of the Match
+                        </option>
+                    </select>
+
+                    <button type="submit" class="admin-btn">
+                        ✓ Save Result
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- STATS -->
+            <div class="admin-card">
+
+                <h3>Player Statistics</h3>
+
+                <p>
+                    Update individual player performance.
+                </p>
+
+                <form id="statsForm">
+
+                    <select id="statsPlayer" required>
+                        <option value="">
+                            Select Player
+                        </option>
+                    </select>
+
+                    <input
+                        type="number"
+                        id="runs"
+                        placeholder="Runs"
+                        min="0"
+                        required
+                    >
+
+                    <input
+                        type="number"
+                        id="wickets"
+                        placeholder="Wickets"
+                        min="0"
+                        required
+                    >
+
+                    <input
+                        type="number"
+                        id="wins"
+                        placeholder="Wins"
+                        min="0"
+                        required
+                    >
+
+                    <button type="submit" class="admin-btn">
+                        ✓ Save Statistics
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <main>
+
+        <!-- TODAY -->
+        <section class="section" id="schedule">
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    MATCH CENTER
+                </p>
+
+                <h2>
+                    Today's Matches
+                </h2>
+
+                <p>
+                    Check who is playing today.
+                </p>
+
+            </div>
+
+            <div
+                class="matches-grid"
+                id="todayMatchesContainer"
+            ></div>
+
+        </section>
+
+
+        <!-- TOMORROW -->
+        <section class="section" id="tomorrow">
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    UPCOMING
+                </p>
+
+                <h2>
+                    Tomorrow's Matches
+                </h2>
+
+                <p>
+                    Check tomorrow's fixtures.
+                </p>
+
+            </div>
+
+            <div
+                class="matches-grid"
+                id="tomorrowMatchesContainer"
+            ></div>
+
+        </section>
+
+
+        <!-- SINGLE WICKET -->
+        <section
+            class="section dark-section"
+            id="singleWicket"
+        >
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    1V1 MATCHES
+                </p>
+
+                <h2>
+                    Single Wicket
+                </h2>
+
+                <p>
+                    All Single Wicket 1v1 matches.
+                </p>
+
+            </div>
+
+            <div
+                class="matches-grid"
+                id="singleWicketContainer"
+            ></div>
+
+        </section>
+
+
+        <!-- DOUBLE WICKET -->
+        <section
+            class="section"
+            id="doubleWicket"
+        >
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    2V2 MATCHES
+                </p>
+
+                <h2>
+                    Double Wicket
+                </h2>
+
+                <p>
+                    All Double Wicket 2v2 matches.
+                </p>
+
+            </div>
+
+            <div
+                class="matches-grid"
+                id="doubleWicketContainer"
+            ></div>
+
+        </section>
+
+
+        <!-- FULL SCHEDULE -->
+        <section
+            class="section dark-section"
+            id="fullSchedule"
+        >
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    FIXTURES
+                </p>
+
+                <h2>
+                    Full Schedule
+                </h2>
+
+                <p>
+                    All tournament matches and their current status.
+                </p>
+
+            </div>
+
+            <div class="schedule-table-wrapper">
+
+                <table class="schedule-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Match</th>
+                            <th>Type</th>
+                            <th>Venue</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="fullScheduleContainer"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- RESULTS -->
+        <section
+            class="section dark-section"
+            id="results"
+        >
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    LATEST
+                </p>
+
+                <h2>
+                    Recent Results
+                </h2>
+
+                <p>
+                    Latest completed matches.
+                </p>
+
+            </div>
+
+            <div
+                class="results-grid"
+                id="resultsContainer"
+            ></div>
+
+        </section>
+
+
+        <!-- PLAYERS -->
+        <section class="section" id="players">
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    OUR PLAYERS
+                </p>
+
+                <h2>
+                    Player Profiles
+                </h2>
+
+                <p>
+                    All registered tournament players.
+                </p>
+
+            </div>
+
+            <div
+                class="players-grid"
+                id="playersContainer"
+            ></div>
+
+        </section>
+
+
+        <!-- STATS -->
+        <section
+            class="section stats-section"
+            id="stats"
+        >
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    PLAYER PERFORMANCE
+                </p>
+
+                <h2>
+                    Top Statistics
+                </h2>
+
+            </div>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        🏏
+                    </div>
+
+                    <p>TOP SCORER</p>
+
+                    <h3 id="topScorer">—</h3>
+
+                    <span id="topScorerRuns">
+                        Runs: 0
+                    </span>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        🎯
+                    </div>
+
+                    <p>BEST BOWLER</p>
+
+                    <h3 id="bestBowler">—</h3>
+
+                    <span id="bestBowlerWickets">
+                        Wickets: 0
+                    </span>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        🏆
+                    </div>
+
+                    <p>MOST WINS</p>
+
+                    <h3 id="mostWins">—</h3>
+
+                    <span id="mostWinsCount">
+                        Wins: 0
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <h3>
+            🏏 Cross Single/Double Wicket Matches
+        </h3>
+
+        <p>
+            Tournament Match Center
+        </p>
+
+        <button
+            id="footerAdminBtn"
+            class="footer-admin-btn"
+        >
+            🔐 Admin Login
+        </button>
+
+        <p class="copyright">
+            © 2026 Cross Cricket. All rights reserved.
+        </p>
+
+    </footer>
+
+
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- WEBSITE JS -->
+    <script src="script.js"></script>
+
+</body>
+
+</html>
