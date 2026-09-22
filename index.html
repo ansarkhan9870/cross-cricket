@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -32,7 +31,7 @@
             <a href="#stats">Stats</a>
         </nav>
 
-        <button id="adminLoginBtn" class="login-btn">
+        <button id="adminLoginBtn" class="login-btn" type="button">
             🔐 Admin
         </button>
 
@@ -76,11 +75,11 @@
 
 
     <!-- ADMIN LOGIN MODAL -->
-    <div id="loginModal" class="modal">
+    <div id="loginModal" class="modal" style="display:none;">
 
         <div class="modal-box">
 
-            <button id="closeLogin" class="close-btn">
+            <button id="closeLogin" class="close-btn" type="button">
                 ×
             </button>
 
@@ -147,7 +146,7 @@
                     </p>
                 </div>
 
-                <button id="logoutBtn" class="logout-btn">
+                <button id="logoutBtn" class="logout-btn" type="button">
                     Logout
                 </button>
 
@@ -214,7 +213,7 @@
 
 
                     <!-- SINGLE -->
-                    <div id="singleMatchFields">
+                    <div id="singleMatchFields" style="display:none;">
 
                         <label>Player 1</label>
 
@@ -247,7 +246,7 @@
 
                             <label>Player 1</label>
 
-                            <select id="doubleTeamAPlayer1">
+                            <select id="doublePlayerA1">
                                 <option value="">
                                     Select Player 1
                                 </option>
@@ -255,7 +254,7 @@
 
                             <label>Player 2</label>
 
-                            <select id="doubleTeamAPlayer2">
+                            <select id="doublePlayerA2">
                                 <option value="">
                                     Select Player 2
                                 </option>
@@ -270,7 +269,7 @@
 
                             <label>Player 1</label>
 
-                            <select id="doubleTeamBPlayer1">
+                            <select id="doublePlayerB1">
                                 <option value="">
                                     Select Player 1
                                 </option>
@@ -278,7 +277,7 @@
 
                             <label>Player 2</label>
 
-                            <select id="doubleTeamBPlayer2">
+                            <select id="doublePlayerB2">
                                 <option value="">
                                     Select Player 2
                                 </option>
@@ -350,7 +349,7 @@
                         required
                     >
 
-                    <select id="resultPlayerOfMatch" required>
+                    <select id="playerOfMatch" required>
                         <option value="">
                             Select Player of the Match
                         </option>
@@ -384,7 +383,7 @@
 
                     <input
                         type="number"
-                        id="statsRuns"
+                        id="runs"
                         placeholder="Runs"
                         min="0"
                         required
@@ -392,7 +391,7 @@
 
                     <input
                         type="number"
-                        id="statsWickets"
+                        id="wickets"
                         placeholder="Wickets"
                         min="0"
                         required
@@ -400,7 +399,7 @@
 
                     <input
                         type="number"
-                        id="statsWins"
+                        id="wins"
                         placeholder="Wins"
                         min="0"
                         required
@@ -756,6 +755,7 @@
         <button
             id="footerAdminBtn"
             class="footer-admin-btn"
+            type="button"
         >
             🔐 Admin Login
         </button>
@@ -776,4 +776,3 @@
 </body>
 
 </html>
-
