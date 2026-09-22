@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -126,7 +127,7 @@
     <!-- ADMIN PANEL -->
     <section
         class="section admin-section"
-        id="admin"
+        id="adminPanel"
         style="display:none;"
     >
 
@@ -201,11 +202,11 @@
                             Select Match Type
                         </option>
 
-                        <option value="Single Wicket">
+                        <option value="single">
                             Single Wicket — 1v1
                         </option>
 
-                        <option value="Double Wicket">
+                        <option value="double">
                             Double Wicket — 2v2
                         </option>
 
@@ -246,7 +247,7 @@
 
                             <label>Player 1</label>
 
-                            <select id="doublePlayerA1">
+                            <select id="doubleTeamAPlayer1">
                                 <option value="">
                                     Select Player 1
                                 </option>
@@ -254,7 +255,7 @@
 
                             <label>Player 2</label>
 
-                            <select id="doublePlayerA2">
+                            <select id="doubleTeamAPlayer2">
                                 <option value="">
                                     Select Player 2
                                 </option>
@@ -269,7 +270,7 @@
 
                             <label>Player 1</label>
 
-                            <select id="doublePlayerB1">
+                            <select id="doubleTeamBPlayer1">
                                 <option value="">
                                     Select Player 1
                                 </option>
@@ -277,7 +278,7 @@
 
                             <label>Player 2</label>
 
-                            <select id="doublePlayerB2">
+                            <select id="doubleTeamBPlayer2">
                                 <option value="">
                                     Select Player 2
                                 </option>
@@ -349,7 +350,7 @@
                         required
                     >
 
-                    <select id="playerOfMatch" required>
+                    <select id="resultPlayerOfMatch" required>
                         <option value="">
                             Select Player of the Match
                         </option>
@@ -383,7 +384,7 @@
 
                     <input
                         type="number"
-                        id="runs"
+                        id="statsRuns"
                         placeholder="Runs"
                         min="0"
                         required
@@ -391,7 +392,7 @@
 
                     <input
                         type="number"
-                        id="wickets"
+                        id="statsWickets"
                         placeholder="Wickets"
                         min="0"
                         required
@@ -399,7 +400,7 @@
 
                     <input
                         type="number"
-                        id="wins"
+                        id="statsWins"
                         placeholder="Wins"
                         min="0"
                         required
@@ -410,6 +411,31 @@
                     </button>
 
                 </form>
+
+            </div>
+
+
+            <!-- DATA MANAGEMENT -->
+            <div class="admin-card data-management-card">
+
+                <h3>Data Management</h3>
+
+                <p>
+                    Remove tournament data and reset the tournament.
+                </p>
+
+                <button
+                    type="button"
+                    id="resetTournamentBtn"
+                    class="admin-btn danger-btn"
+                >
+                    🗑️ Reset Tournament Data
+                </button>
+
+                <p class="reset-warning">
+                    ⚠️ This will remove tournament data.
+                    Your admin account and website design will not be deleted.
+                </p>
 
             </div>
 
@@ -750,3 +776,4 @@
 </body>
 
 </html>
+
