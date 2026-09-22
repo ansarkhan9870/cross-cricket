@@ -94,34 +94,70 @@ function isDoubleMatch(match) {
 }
 
 
+/*
+   Converts database player/team values into display text.
+
+   Single:
+   "Ansar"
+
+   Double:
+   ["Ansar", "Danish"]
+   ->
+   "Ansar & Danish"
+*/
 function getPlayerNames(player) {
+
     if (!player) {
         return "";
     }
 
-    return String(player).trim();
+    if (Array.isArray(player)) {
+
+        return player
+            .map(function (name) {
+                return String(name).trim();
+            })
+            .filter(Boolean)
+            .join(" & ");
+    }
+
+    return String(player)
+        .trim()
+        .replace(/,/g, " & ");
 }
 
 
+/*
+   Gets Team A / Team B using the REAL database columns.
+
+   Single Wicket:
+   player_a / player_b
+
+   Double Wicket:
+   team_a_players / team_b_players
+*/
 function getTeamDisplay(match, side) {
+
     if (!match) {
         return "";
     }
 
     if (side === "A") {
+
         if (isSingleMatch(match)) {
             return getPlayerNames(match.player_a);
         }
 
-        return getPlayerNames(match.team_a);
+        return getPlayerNames(match.team_a_players);
     }
 
     if (side === "B") {
+
         if (isSingleMatch(match)) {
             return getPlayerNames(match.player_b);
         }
 
-        return getPlayerNames(match.team_b);
+        return getPlayerNames(match.team_b_players);
     }
 
     return "";
@@ -129,42 +165,133 @@ function getTeamDisplay(match, side) {
 
 
 function getTodayString() {
+
     const now = new Date();
 
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
+    const year =
+        now.getFullYear();
+
+    const month =
+        String(now.getMonth() + 1)
+            .padStart(2, "0");
+
+    const day =
+        String(now.getDate())
+            .padStart(2, "0");
 
     return `${year}-${month}-${day}`;
 }
 
 
 function getTomorrowString() {
-    const tomorrow = new Date();
 
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrow =
+        new Date();
 
-    const year = tomorrow.getFullYear();
-    const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
-    const day = String(tomorrow.getDate()).padStart(2, "0");
+    tomorrow.setDate(
+        tomorrow.getDate() + 1
+    );
+
+    const year =
+        tomorrow.getFullYear();
+
+    const month =
+        String(tomorrow.getMonth() + 1)
+            .padStart(2, "0");
+
+    const day =
+        String(tomorrow.getDate())
+            .padStart(2, "0");
 
     return `${year}-${month}-${day}`;
 }
 
 
 function sortMatchesByDateTime(list) {
+
     return [...list].sort((a, b) => {
 
-        const dateA = new Date(
-            `${a.date || "9999-12-31"}T${a.time || "23:59"}`
-        );
+        const dateA =
+            new Date(
+                `${a.date || "9999-12-31"}T${a.time || "23:59"}`
+            );
 
-        const dateB = new Date(
-            `${b.date || "9999-12-31"}T${b.time || "23:59"}`
-        );
+        const dateB =
+            new Date(
+                `${b.date || "9999-12-31"}T${b.time || "23:59"}`
+            );
 
         return dateA - dateB;
     });
+}
+
+
+/*
+   Returns all players participating in a match.
+   Used for Player of the Match.
+*/
+function getMatchPlayers(match) {
+
+    if (!match) {
+        return [];
+    }
+
+    let matchPlayers = [];
+
+    if (isSingleMatch(match)) {
+
+        matchPlayers.push(
+            match.player_a
+        );
+
+        matchPlayers.push(
+            match.player_b
+        );
+
+    } else {
+
+        if (Array.isArray(match.team_a_players)) {
+
+            matchPlayers.push(
+                ...match.team_a_players
+            );
+
+        } else if (match.player_a) {
+
+            matchPlayers.push(
+                ...String(match.player_a)
+                    .split("&")
+                    .map(function (name) {
+                        return name.trim();
+                    })
+            );
+        }
+
+
+        if (Array.isArray(match.team_b_players)) {
+
+            matchPlayers.push(
+                ...match.team_b_players
+            );
+
+        } else if (match.player_b) {
+
+            matchPlayers.push(
+                ...String(match.player_b)
+                    .split("&")
+                    .map(function (name) {
+                        return name.trim();
+                    })
+            );
+        }
+    }
+
+
+    return matchPlayers
+        .map(function (name) {
+            return String(name || "").trim();
+        })
+        .filter(Boolean);
 }
 
 
@@ -330,7 +457,10 @@ async function verifyAdmin(email) {
         return false;
     }
 
-    const { data, error } = await supabaseClient
+    const {
+        data,
+        error
+    } = await supabaseClient
         .from("admin_users")
         .select("email")
         .eq("email", email)
@@ -449,7 +579,9 @@ if (loginForm) {
 
             await loadData();
 
-            alert("Admin login successful.");
+            alert(
+                "Admin login successful."
+            );
 
         }
     );
@@ -484,7 +616,9 @@ if (logoutBtn) {
 
             hideAdminPanel();
 
-            alert("Logged out successfully.");
+            alert(
+                "Logged out successfully."
+            );
 
         }
     );
@@ -501,11 +635,14 @@ supabaseClient.auth.onAuthStateChange(
         if (session?.user) {
 
             const isAdmin =
-                await verifyAdmin(session.user.email);
+                await verifyAdmin(
+                    session.user.email
+                );
 
             if (isAdmin) {
 
-                currentUser = session.user;
+                currentUser =
+                    session.user;
 
                 showAdminPanel();
 
@@ -777,7 +914,11 @@ if (playerForm) {
             event.preventDefault();
 
             if (!currentUser) {
-                alert("Please login as admin first.");
+
+                alert(
+                    "Please login as admin first."
+                );
+
                 return;
             }
 
@@ -862,7 +1003,11 @@ if (matchForm) {
             event.preventDefault();
 
             if (!currentUser) {
-                alert("Please login as admin first.");
+
+                alert(
+                    "Please login as admin first."
+                );
+
                 return;
             }
 
@@ -921,6 +1066,8 @@ if (matchForm) {
             };
 
 
+            /* SINGLE WICKET */
+
             if (type === "single") {
 
                 const playerA =
@@ -960,13 +1107,12 @@ if (matchForm) {
                 matchData.player_b =
                     playerB;
 
-                matchData.team_a =
-                    playerA;
+            }
 
-                matchData.team_b =
-                    playerB;
 
-            } else {
+            /* DOUBLE WICKET */
+
+            else {
 
                 const a1 =
                     document.getElementById(
@@ -1024,17 +1170,22 @@ if (matchForm) {
                 }
 
 
+                /*
+                   Keep player_a/player_b for compatibility
+                   and also save proper JSON arrays.
+                */
+
                 matchData.player_a =
                     `${a1} & ${a2}`;
 
                 matchData.player_b =
                     `${b1} & ${b2}`;
 
-                matchData.team_a =
-                    `${a1} & ${a2}`;
+                matchData.team_a_players =
+                    [a1, a2];
 
-                matchData.team_b =
-                    `${b1} & ${b2}`;
+                matchData.team_b_players =
+                    [b1, b2];
             }
 
 
@@ -1042,7 +1193,9 @@ if (matchForm) {
                 error
             } = await supabaseClient
                 .from("matches")
-                .insert([matchData]);
+                .insert([
+                    matchData
+                ]);
 
 
             if (error) {
@@ -1135,17 +1288,23 @@ function createMatchCard(match) {
             <div class="match-info">
 
                 <span>
-                    📅 ${escapeHTML(formatLocalDate(match.date))}
+                    📅 ${escapeHTML(
+                        formatLocalDate(match.date)
+                    )}
                 </span>
 
                 <span>
-                    🕒 ${escapeHTML(match.time || "")}
+                    🕒 ${escapeHTML(
+                        match.time || ""
+                    )}
                 </span>
 
             </div>
 
             <div class="match-venue">
-                📍 ${escapeHTML(match.venue || "")}
+                📍 ${escapeHTML(
+                    match.venue || ""
+                )}
             </div>
 
         </div>
@@ -1408,7 +1567,11 @@ function renderFullSchedule() {
                             <strong>
                                 ${escapeHTML(teamA)}
                             </strong>
-                            <span> vs </span>
+
+                            <span>
+                                vs
+                            </span>
+
                             <strong>
                                 ${escapeHTML(teamB)}
                             </strong>
@@ -1426,7 +1589,8 @@ function renderFullSchedule() {
 
                         <td>
                             ${escapeHTML(
-                                match.status || "Scheduled"
+                                match.status ||
+                                "Scheduled"
                             )}
                         </td>
 
@@ -1449,12 +1613,10 @@ function renderResultOptions() {
             "resultMatch"
         );
 
-
     const winner =
         document.getElementById(
             "winner"
         );
-
 
     const playerOfMatch =
         document.getElementById(
@@ -1495,7 +1657,9 @@ function renderResultOptions() {
         option.textContent =
             `${formatLocalDate(match.date)} — ${getTeamDisplay(match, "A")} vs ${getTeamDisplay(match, "B")}`;
 
-        resultMatch.appendChild(option);
+        resultMatch.appendChild(
+            option
+        );
 
     });
 
@@ -1519,6 +1683,8 @@ function renderResultOptions() {
                 Select Player of the Match
             </option>
         `;
+
+        playerOfMatch.disabled = true;
     }
 }
 
@@ -1549,21 +1715,41 @@ if (resultMatchSelect) {
                 );
 
 
-            if (!winner) {
-                return;
+            const playerOfMatch =
+                document.getElementById(
+                    "playerOfMatch"
+                );
+
+
+            if (winner) {
+
+                winner.innerHTML = `
+                    <option value="">
+                        Select Winner
+                    </option>
+                `;
             }
 
 
-            winner.innerHTML = `
-                <option value="">
-                    Select Winner
-                </option>
-            `;
+            if (playerOfMatch) {
+
+                playerOfMatch.innerHTML = `
+                    <option value="">
+                        Select Player of the Match
+                    </option>
+                `;
+            }
 
 
             if (!selectedId) {
 
-                winner.disabled = true;
+                if (winner) {
+                    winner.disabled = true;
+                }
+
+                if (playerOfMatch) {
+                    playerOfMatch.disabled = true;
+                }
 
                 return;
             }
@@ -1580,13 +1766,16 @@ if (resultMatchSelect) {
 
             if (!match) {
 
-                winner.disabled = true;
+                if (winner) {
+                    winner.disabled = true;
+                }
+
+                if (playerOfMatch) {
+                    playerOfMatch.disabled = true;
+                }
 
                 return;
             }
-
-
-            winner.disabled = false;
 
 
             const teamA =
@@ -1597,94 +1786,53 @@ if (resultMatchSelect) {
                 getTeamDisplay(match, "B");
 
 
-            const optionA =
-                document.createElement("option");
+            /* WINNER OPTIONS */
 
-            optionA.value =
-                teamA;
+            if (winner) {
 
-            optionA.textContent =
-                teamA;
+                winner.disabled = false;
 
 
-            const optionB =
-                document.createElement("option");
+                const optionA =
+                    document.createElement("option");
 
-            optionB.value =
-                teamB;
+                optionA.value =
+                    teamA;
 
-            optionB.textContent =
-                teamB;
-
-
-            winner.appendChild(optionA);
-
-            winner.appendChild(optionB);
+                optionA.textContent =
+                    teamA;
 
 
-            const playerOfMatch =
-                document.getElementById(
-                    "playerOfMatch"
+                const optionB =
+                    document.createElement("option");
+
+                optionB.value =
+                    teamB;
+
+                optionB.textContent =
+                    teamB;
+
+
+                winner.appendChild(
+                    optionA
                 );
 
+                winner.appendChild(
+                    optionB
+                );
+            }
+
+
+            /* PLAYER OF MATCH OPTIONS */
 
             if (playerOfMatch) {
 
-                playerOfMatch.innerHTML = `
-                    <option value="">
-                        Select Player of the Match
-                    </option>
-                `;
+                const playersForMatch =
+                    getMatchPlayers(match);
 
 
-                const playersForMatch = [];
-
-
-                if (isSingleMatch(match)) {
-
-                    playersForMatch.push(
-                        match.player_a
-                    );
-
-                    playersForMatch.push(
-                        match.player_b
-                    );
-
-                } else {
-
-                    const teamAPlayers =
-                        String(
-                            match.team_a || ""
-                        )
-                        .split("&")
-                        .map(function (name) {
-                            return name.trim();
-                        });
-
-
-                    const teamBPlayers =
-                        String(
-                            match.team_b || ""
-                        )
-                        .split("&")
-                        .map(function (name) {
-                            return name.trim();
-                        });
-
-
-                    playersForMatch.push(
-                        ...teamAPlayers
-                    );
-
-                    playersForMatch.push(
-                        ...teamBPlayers
-                    );
-                }
-
-
-                playersForMatch
-                    .filter(Boolean)
-                    .forEach(function (name) {
+                playersForMatch.forEach(
+                    function (name) {
 
                         const option =
                             document.createElement(
@@ -1701,7 +1849,12 @@ if (resultMatchSelect) {
                             option
                         );
 
-                    });
+                    }
+                );
+
+
+                playerOfMatch.disabled =
+                    playersForMatch.length === 0;
             }
 
         }
@@ -1803,6 +1956,10 @@ if (resultForm) {
                     : teamA;
 
 
+            /*
+               Save result.
+            */
+
             const {
                 error: resultError
             } = await supabaseClient
@@ -1832,6 +1989,10 @@ if (resultForm) {
             }
 
 
+            /*
+               Mark match completed.
+            */
+
             const {
                 error: matchError
             } = await supabaseClient
@@ -1855,7 +2016,14 @@ if (resultForm) {
             }
 
 
-            await addWinToPlayers(match);
+            /*
+               Add win to winning players.
+            */
+
+            await addWinToPlayers(
+                match,
+                winner
+            );
 
 
             resultForm.reset();
@@ -1875,29 +2043,12 @@ if (resultForm) {
    25. ADD WIN TO PLAYERS
    ========================================================= */
 
-async function addWinToPlayers(match) {
+async function addWinToPlayers(
+    match,
+    winnerInput
+) {
 
-    const winnerTeam =
-        getTeamDisplay(
-            match,
-            "A"
-        );
-
-
-    const winnerTeamB =
-        getTeamDisplay(
-            match,
-            "B"
-        );
-
-
-    const winnerInput =
-        document.getElementById(
-            "winner"
-        )?.value;
-
-
-    if (!winnerInput) {
+    if (!match || !winnerInput) {
         return;
     }
 
@@ -1905,27 +2056,70 @@ async function addWinToPlayers(match) {
     let winningPlayers = [];
 
 
-    if (
-        winnerInput === winnerTeam
-    ) {
+    const teamA =
+        getTeamDisplay(
+            match,
+            "A"
+        );
 
-        winningPlayers =
-            String(winnerTeam)
-                .split("&")
-                .map(function (name) {
-                    return name.trim();
-                });
 
-    } else if (
-        winnerInput === winnerTeamB
-    ) {
+    const teamB =
+        getTeamDisplay(
+            match,
+            "B"
+        );
 
-        winningPlayers =
-            String(winnerTeamB)
-                .split("&")
-                .map(function (name) {
-                    return name.trim();
-                });
+
+    if (winnerInput === teamA) {
+
+        if (isSingleMatch(match)) {
+
+            winningPlayers = [
+                match.player_a
+            ];
+
+        } else if (
+            Array.isArray(match.team_a_players)
+        ) {
+
+            winningPlayers =
+                [...match.team_a_players];
+
+        } else {
+
+            winningPlayers =
+                String(match.player_a || "")
+                    .split("&")
+                    .map(function (name) {
+                        return name.trim();
+                    });
+        }
+
+
+    } else if (winnerInput === teamB) {
+
+        if (isSingleMatch(match)) {
+
+            winningPlayers = [
+                match.player_b
+            ];
+
+        } else if (
+            Array.isArray(match.team_b_players)
+        ) {
+
+            winningPlayers =
+                [...match.team_b_players];
+
+        } else {
+
+            winningPlayers =
+                String(match.player_b || "")
+                    .split("&")
+                    .map(function (name) {
+                        return name.trim();
+                    });
+        }
     }
 
 
@@ -1944,33 +2138,64 @@ async function addWinToPlayers(match) {
                 return String(
                     item.player
                 ).toLowerCase() ===
-                playerName.toLowerCase();
+                String(playerName)
+                    .toLowerCase();
 
             });
 
 
         if (existing) {
 
-            await supabaseClient
+            const {
+                error
+            } = await supabaseClient
                 .from("stats")
                 .update({
                     wins:
                         Number(existing.wins || 0) + 1
                 })
-                .eq("player", existing.player);
+                .eq(
+                    "player",
+                    existing.player
+                );
+
+
+            if (error) {
+                console.error(
+                    "Could not update player win:",
+                    error
+                );
+            }
 
         } else {
 
-            await supabaseClient
+            const {
+                error
+            } = await supabaseClient
                 .from("stats")
                 .insert([
                     {
-                        player: playerName,
-                        runs: 0,
-                        wickets: 0,
-                        wins: 1
+                        player:
+                            playerName,
+
+                        runs:
+                            0,
+
+                        wickets:
+                            0,
+
+                        wins:
+                            1
                     }
                 ]);
+
+
+            if (error) {
+                console.error(
+                    "Could not create player stats:",
+                    error
+                );
+            }
         }
     }
 }
@@ -2006,85 +2231,94 @@ function renderResults() {
 
 
     container.innerHTML =
-        results.map(function (result) {
+        results
+            .map(function (result) {
 
-            const match =
-                matches.find(function (item) {
+                const match =
+                    matches.find(function (item) {
 
-                    return String(item.id) ===
-                        String(result.match_id);
+                        return String(item.id) ===
+                            String(result.match_id);
 
-                });
-
-
-            const typeLabel =
-                match
-                    ? (
-                        isSingleMatch(match)
-                            ? "Single Wicket"
-                            : "Double Wicket"
-                    )
-                    : "";
+                    });
 
 
-            return `
-                <div class="result-card">
+                const typeLabel =
+                    match
+                        ? (
+                            isSingleMatch(match)
+                                ? "Single Wicket"
+                                : "Double Wicket"
+                        )
+                        : "";
 
-                    <div class="result-top">
 
-                        <span>
-                            ${escapeHTML(typeLabel)}
-                        </span>
+                return `
+                    <div class="result-card">
 
-                        <span>
-                            ✓ Completed
-                        </span>
+                        <div class="result-top">
 
-                    </div>
-
-                    <div class="result-main">
-
-                        <div class="result-winner">
-                            🏆
-                            ${escapeHTML(
-                                result.winner ||
-                                result.winner_team ||
-                                ""
-                            )}
-                        </div>
-
-                        <div class="result-score">
-                            ${escapeHTML(
-                                result.score || ""
-                            )}
-                        </div>
-
-                    </div>
-
-                    <div class="result-details">
-
-                        <p>
-                            Runner-up:
-                            ${escapeHTML(
-                                result.loser || ""
-                            )}
-                        </p>
-
-                        <p>
-                            Player of the Match:
-                            <strong>
+                            <span>
                                 ${escapeHTML(
-                                    result.player_of_match || "—"
+                                    typeLabel
                                 )}
-                            </strong>
-                        </p>
+                            </span>
+
+                            <span>
+                                ✓ Completed
+                            </span>
+
+                        </div>
+
+                        <div class="result-main">
+
+                            <div class="result-winner">
+
+                                🏆
+                                ${escapeHTML(
+                                    result.winner ||
+                                    result.winner_team ||
+                                    ""
+                                )}
+
+                            </div>
+
+                            <div class="result-score">
+
+                                ${escapeHTML(
+                                    result.score || ""
+                                )}
+
+                            </div>
+
+                        </div>
+
+                        <div class="result-details">
+
+                            <p>
+                                Runner-up:
+                                ${escapeHTML(
+                                    result.loser || ""
+                                )}
+                            </p>
+
+                            <p>
+                                Player of the Match:
+                                <strong>
+                                    ${escapeHTML(
+                                        result.player_of_match ||
+                                        "—"
+                                    )}
+                                </strong>
+                            </p>
+
+                        </div>
 
                     </div>
+                `;
 
-                </div>
-            `;
-
-        }).join("");
+            })
+            .join("");
 }
 
 
@@ -2170,11 +2404,19 @@ if (statsForm) {
                     await supabaseClient
                         .from("stats")
                         .update({
-                            runs: runs,
-                            wickets: wickets,
-                            wins: wins
+                            runs:
+                                runs,
+
+                            wickets:
+                                wickets,
+
+                            wins:
+                                wins
                         })
-                        .eq("player", existing.player);
+                        .eq(
+                            "player",
+                            existing.player
+                        );
 
                 error =
                     response.error;
@@ -2186,10 +2428,17 @@ if (statsForm) {
                         .from("stats")
                         .insert([
                             {
-                                player: player,
-                                runs: runs,
-                                wickets: wickets,
-                                wins: wins
+                                player:
+                                    player,
+
+                                runs:
+                                    runs,
+
+                                wickets:
+                                    wickets,
+
+                                wins:
+                                    wins
                             }
                         ]);
 
@@ -2331,7 +2580,9 @@ function renderStats() {
     if (topScorerRuns) {
 
         topScorerRuns.textContent =
-            `Runs: ${Number(scorer?.runs || 0)}`;
+            `Runs: ${Number(
+                scorer?.runs || 0
+            )}`;
     }
 
 
@@ -2392,98 +2643,124 @@ function renderPlayers() {
 
 
     playersContainer.innerHTML =
-        players.map(function (player) {
+        players
+            .map(function (player) {
 
-            const playerStats =
-                stats.find(function (item) {
+                const playerStats =
+                    stats.find(function (item) {
 
-                    return String(
-                        item.player
-                    ).toLowerCase() ===
-                    String(player.name).toLowerCase();
+                        return String(
+                            item.player
+                        ).toLowerCase() ===
+                        String(player.name)
+                            .toLowerCase();
 
-                });
-
-
-            const runs =
-                Number(
-                    playerStats?.runs || 0
-                );
+                    });
 
 
-            const wickets =
-                Number(
-                    playerStats?.wickets || 0
-                );
+                const runs =
+                    Number(
+                        playerStats?.runs || 0
+                    );
 
 
-            const wins =
-                Number(
-                    playerStats?.wins || 0
-                );
+                const wickets =
+                    Number(
+                        playerStats?.wickets || 0
+                    );
 
 
-            const deleteButton =
-                currentUser
-                    ? `
-                        <button
-                            type="button"
-                            class="delete-player-btn"
-                            data-player-id="${escapeHTML(player.id)}"
-                            data-player-name="${escapeHTML(player.name)}"
-                        >
-                            🗑️ Delete Player
-                        </button>
-                    `
-                    : "";
+                const wins =
+                    Number(
+                        playerStats?.wins || 0
+                    );
 
 
-            return `
-                <div class="player-card">
+                const deleteButton =
+                    currentUser
+                        ? `
+                            <button
+                                type="button"
+                                class="delete-player-btn"
+                                data-player-id="${escapeHTML(
+                                    player.id
+                                )}"
+                                data-player-name="${escapeHTML(
+                                    player.name
+                                )}"
+                            >
+                                🗑️ Delete Player
+                            </button>
+                        `
+                        : "";
 
-                    <div class="player-avatar">
-                        ${escapeHTML(
-                            player.name
-                                .charAt(0)
-                                .toUpperCase()
-                        )}
+
+                return `
+                    <div class="player-card">
+
+                        <div class="player-avatar">
+
+                            ${escapeHTML(
+                                player.name
+                                    .charAt(0)
+                                    .toUpperCase()
+                            )}
+
+                        </div>
+
+                        <h3>
+                            ${escapeHTML(
+                                player.name
+                            )}
+                        </h3>
+
+                        <div class="player-stats">
+
+                            <div>
+
+                                <strong>
+                                    ${runs}
+                                </strong>
+
+                                <span>
+                                    Runs
+                                </span>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    ${wickets}
+                                </strong>
+
+                                <span>
+                                    Wickets
+                                </span>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    ${wins}
+                                </strong>
+
+                                <span>
+                                    Wins
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        ${deleteButton}
+
                     </div>
+                `;
 
-                    <h3>
-                        ${escapeHTML(player.name)}
-                    </h3>
-
-                    <div class="player-stats">
-
-                        <div>
-                            <strong>
-                                ${runs}
-                            </strong>
-                            <span>Runs</span>
-                        </div>
-
-                        <div>
-                            <strong>
-                                ${wickets}
-                            </strong>
-                            <span>Wickets</span>
-                        </div>
-
-                        <div>
-                            <strong>
-                                ${wins}
-                            </strong>
-                            <span>Wins</span>
-                        </div>
-
-                    </div>
-
-                    ${deleteButton}
-
-                </div>
-            `;
-
-        }).join("");
+            })
+            .join("");
 }
 
 
@@ -2506,33 +2783,76 @@ async function deletePlayer(
     }
 
 
+    const targetName =
+        String(playerName)
+            .trim()
+            .toLowerCase();
+
+
+    /*
+       Check both Single and Double matches.
+    */
+
     const usedInMatch =
         matches.some(function (match) {
 
-            const values = [
-
-                match.player_a,
-                match.player_b,
-                match.team_a,
-                match.team_b
-
-            ];
+            let names = [];
 
 
-            return values.some(function (value) {
+            if (match.player_a) {
 
-                return String(
-                    value || ""
-                )
-                .split("&")
-                .map(function (name) {
-                    return name.trim().toLowerCase();
-                })
-                .includes(
-                    String(playerName)
-                        .trim()
-                        .toLowerCase()
+                names.push(
+                    ...String(match.player_a)
+                        .split("&")
+                        .map(function (name) {
+                            return name.trim();
+                        })
                 );
+            }
+
+
+            if (match.player_b) {
+
+                names.push(
+                    ...String(match.player_b)
+                        .split("&")
+                        .map(function (name) {
+                            return name.trim();
+                        })
+                );
+            }
+
+
+            if (
+                Array.isArray(
+                    match.team_a_players
+                )
+            ) {
+
+                names.push(
+                    ...match.team_a_players
+                );
+            }
+
+
+            if (
+                Array.isArray(
+                    match.team_b_players
+                )
+            ) {
+
+                names.push(
+                    ...match.team_b_players
+                );
+            }
+
+
+            return names.some(function (name) {
+
+                return String(name)
+                    .trim()
+                    .toLowerCase() ===
+                    targetName;
 
             });
 
@@ -2565,7 +2885,10 @@ async function deletePlayer(
     } = await supabaseClient
         .from("stats")
         .delete()
-        .eq("player", playerName);
+        .eq(
+            "player",
+            playerName
+        );
 
 
     if (statsError) {
@@ -2586,7 +2909,10 @@ async function deletePlayer(
     } = await supabaseClient
         .from("players")
         .delete()
-        .eq("id", playerId);
+        .eq(
+            "id",
+            playerId
+        );
 
 
     if (playerError) {
@@ -2696,11 +3022,15 @@ if (resetTournamentBtn) {
 
 
                 /* RESULTS */
+
                 response =
                     await supabaseClient
                         .from("results")
                         .delete()
-                        .neq("id", -1);
+                        .neq(
+                            "id",
+                            -1
+                        );
 
 
                 if (response.error) {
@@ -2709,11 +3039,15 @@ if (resetTournamentBtn) {
 
 
                 /* MATCHES */
+
                 response =
                     await supabaseClient
                         .from("matches")
                         .delete()
-                        .neq("id", -1);
+                        .neq(
+                            "id",
+                            -1
+                        );
 
 
                 if (response.error) {
@@ -2722,11 +3056,15 @@ if (resetTournamentBtn) {
 
 
                 /* STATS */
+
                 response =
                     await supabaseClient
                         .from("stats")
                         .delete()
-                        .neq("player", "__never__");
+                        .neq(
+                            "player",
+                            "__never__"
+                        );
 
 
                 if (response.error) {
@@ -2735,11 +3073,15 @@ if (resetTournamentBtn) {
 
 
                 /* PLAYERS */
+
                 response =
                     await supabaseClient
                         .from("players")
                         .delete()
-                        .neq("id", -1);
+                        .neq(
+                            "id",
+                            -1
+                        );
 
 
                 if (response.error) {
